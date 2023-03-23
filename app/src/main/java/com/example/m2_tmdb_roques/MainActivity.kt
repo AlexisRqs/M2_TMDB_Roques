@@ -3,7 +3,6 @@ package com.example.m2_tmdb_roques
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -12,19 +11,23 @@ import android.view.View.VISIBLE
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.work.*
+import com.example.m2_tmdb_roques.TmdbNotifications.Companion.createPopularPersonNotification
 import com.example.m2_tmdb_roques.databinding.ActivityMainBinding
 import com.example.m2_tmdb_roques.model.Person
 import com.example.m2_tmdb_roques.model.PersonPopularResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 const val NOTIFICATION_CHANNEL_ID = "popular_person_notification_channel_id"
+const val TMDB_WORK_REQUEST_TAG = ""
 
 class MainActivity : AppCompatActivity() {
 
@@ -154,19 +157,37 @@ class MainActivity : AppCompatActivity() {
         notificationManager.createNotificationChannel(mChannel)
     }
 
-    fun createPopularPersonNotification(context : Context, p : Person) {
-        // Create notification
-        val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(androidx.appcompat.R.drawable.btn_radio_off_mtrl)
-            .setContentTitle(context.getString(R.string.notification_title))
-            .setContentText(context.getString(R.string.notification_content, p.name.toString(), p.popularity))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+    private fun initWorkManager() {
+
+        // Compute delay between now and wished work request start
+        val currentTime = Calendar.getInstance()
+        val scheduledTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 16)
+            set(Calendar.MINUTE, 30)
+            if (before(currentTime)) {
+                add(Calendar.DATE, 1)
+            }
+        }
+
+        val initialDelay = scheduledTime.timeInMillis - currentTime.timeInMillis
+
+        // Only need to be connected to any network
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        // Show notification
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        // TODO generate unique ID
-        notificationManager.notify(2023, notification)
+        // Build work request
+        val tmdbWorkRequest = PeriodicWorkRequestBuilder<TmdbDailyWorker>(1, TimeUnit.DAYS)
+            .addTag(TMDB_WORK_REQUEST_TAG)
+            .setConstraints(constraints)
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .build()
+
+        // Enqueue request
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            TMDB_WORK_REQUEST_TAG,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            tmdbWorkRequest)
 
     }
 
