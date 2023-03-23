@@ -1,0 +1,8 @@
+<resources>
+
+    <style name="Widget.Theme.m2_tmdb_roques.ScoreGaugeView" parent="">
+        <item name="android:background">@color/white</item>
+        <item name="scoreColor">@color/light_blue_400</item>
+        <item name="scoreLabel">Default label</item>
+    </style>
+</resources>
