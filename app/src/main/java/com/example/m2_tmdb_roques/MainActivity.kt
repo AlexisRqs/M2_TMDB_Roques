@@ -12,7 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentTransaction
+import androidx.fragment.app.commit
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
@@ -70,10 +70,17 @@ class MainActivity : AppCompatActivity() {
         initWorkManager()
 
         if (savedInstanceState == null) {
+            /*
             val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
             ft.setReorderingAllowed(true)
             ft.add(R.id.fragmentContainerView, SocialBarFragment())
             ft.commit()
+            */
+
+            supportFragmentManager.commit() {
+                setReorderingAllowed(true)
+                add(R.id.fragmentContainerView, SocialBarFragment())
+            }
         }
 
         // Init recycler view
