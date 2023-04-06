@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View.GONE
@@ -13,17 +12,23 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.commit
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.work.*
+import com.example.m2_tmdb_roques.TmdbNotifications.Companion.createPopularPersonNotification
 import com.example.m2_tmdb_roques.databinding.ActivityMainBinding
 import com.example.m2_tmdb_roques.model.Person
 import com.example.m2_tmdb_roques.model.PersonPopularResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 const val NOTIFICATION_CHANNEL_ID = "popular_person_notification_channel_id"
+const val TMDB_WORK_REQUEST_TAG = ""
 
 class MainActivity : AppCompatActivity() {
 
@@ -62,13 +67,28 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         createNotificationChannel()
+        initWorkManager()
+
+        if (savedInstanceState == null) {
+            /*
+            val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+            ft.setReorderingAllowed(true)
+            ft.add(R.id.fragmentContainerView, SocialBarFragment())
+            ft.commit()
+            */
+
+            supportFragmentManager.commit() {
+                setReorderingAllowed(true)
+                add(R.id.fragmentContainerView, SocialBarFragment())
+            }
+        }
 
         // Init recycler view
         binding.popularPersonRv.setHasFixedSize(true)
         binding.popularPersonRv.layoutManager = LinearLayoutManager(this)
         personPopularAdapter = PersonPopularAdapter(persons, this)
         binding.popularPersonRv.adapter = personPopularAdapter
-        binding.popularPersonRv.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+        binding.popularPersonRv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 if (newState == SCROLL_STATE_IDLE && !recyclerView.canScrollVertically(1)) {
@@ -101,6 +121,9 @@ class MainActivity : AppCompatActivity() {
                     totalResults = response.body()!!.totalResults!!
                     totalPages = response.body()!!.totalPages!!
                     personPopularAdapter.notifyDataSetChanged()
+                    if (isNotifPermGranted && curPage == 1) {
+                        createPopularPersonNotification(applicationContext, response.body()!!.results[0])
+                    }
                     personPopularAdapter.setMaxPopularity()
                     binding.totalResultsTv.text = getString(R.string.total_results_text,persons.size, totalResults)
                 } else {
@@ -138,18 +161,50 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create the NotificationChannel.
-            val name = getString(R.string.notification_channel_name)
-            val descriptionText = getString(R.string.notification_channel_description)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val mChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance)
-            mChannel.description = descriptionText
-            // Register the channel with the system. You can't change the importance
-            // or other notification behaviors after this.
-            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(mChannel)
+        // Create the NotificationChannel.
+        val name = getString(R.string.notification_channel_name)
+        val descriptionText = getString(R.string.notification_channel_description)
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val mChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance)
+        mChannel.description = descriptionText
+        // Register the channel with the system. You can't change the importance
+        // or other notification behaviors after this.
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(mChannel)
+    }
+
+    private fun initWorkManager() {
+
+        // compute delay between now and wished work request start
+        val currentTime = Calendar.getInstance()
+        val scheduledTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 8)
+            set(Calendar.MINUTE, 0)
+            if (before(currentTime)) {
+                add(Calendar.DATE, 1)
+            }
         }
+
+        val initialDelay = scheduledTime.timeInMillis - currentTime.timeInMillis
+
+        // Only need to be connected to any network
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        // Build work request
+        val tmdbWorkRequest = PeriodicWorkRequestBuilder<TmdbDailyWorker>(1, TimeUnit.DAYS)
+            .addTag(TMDB_WORK_REQUEST_TAG)
+            .setConstraints(constraints)
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .build()
+
+        // Enqueue request
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            TMDB_WORK_REQUEST_TAG,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            tmdbWorkRequest)
+
     }
 
 }
