@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
@@ -66,6 +67,14 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         createNotificationChannel()
+        initWorkManager()
+
+        if (savedInstanceState == null) {
+            val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+            ft.setReorderingAllowed(true)
+            ft.add(R.id.fragmentContainerView, SocialBarFragment())
+            ft.commit()
+        }
 
         // Init recycler view
         binding.popularPersonRv.setHasFixedSize(true)
@@ -159,11 +168,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun initWorkManager() {
 
-        // Compute delay between now and wished work request start
+        // compute delay between now and wished work request start
         val currentTime = Calendar.getInstance()
         val scheduledTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 16)
-            set(Calendar.MINUTE, 30)
+            set(Calendar.HOUR_OF_DAY, 8)
+            set(Calendar.MINUTE, 0)
             if (before(currentTime)) {
                 add(Calendar.DATE, 1)
             }
