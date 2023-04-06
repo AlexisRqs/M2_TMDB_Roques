@@ -24,7 +24,6 @@ class SocialBarFragment : Fragment() {
     ): View? {
         binding = FragmentSocialBarBinding.inflate(inflater, container, false)
         return binding.root
-    //return inflater.inflate(R.layout.fragment_social_bar, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
