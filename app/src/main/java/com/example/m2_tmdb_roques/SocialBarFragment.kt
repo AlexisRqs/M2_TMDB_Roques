@@ -22,7 +22,9 @@ class SocialBarFragment : Fragment() {
 
     // Using the activityViewModels() Kotlin property delegate from the
     // fragment-ktx artifact to retrieve the ViewModel in the activity scope
-    private val viewModel by activityViewModels<SocialBarViewModel>()
+    private val viewModel by activityViewModels<SocialBarViewModel>() {
+        SocialBarViewModelFactory(((requireContext() as MainActivity).application as TmdbApplication).socialBarDao)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
