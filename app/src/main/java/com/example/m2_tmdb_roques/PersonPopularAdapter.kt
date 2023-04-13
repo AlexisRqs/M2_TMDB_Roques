@@ -79,9 +79,13 @@ class PersonPopularAdapter(private val persons: ArrayList<Person>, private val a
 
     override fun onViewDetachedFromWindow(holder: PersonItemViewHolder) {
         super.onViewDetachedFromWindow(holder)
-        /*  appCompatActivity.supportFragmentManager.commitNow {
-             remove(?)
-         } */
+
+        appCompatActivity.supportFragmentManager.findFragmentById(holder.binding.socialBarFcv.id)?.let {
+            appCompatActivity.supportFragmentManager.commitNow {
+                remove(it)
+            }
+        }
+
 
     }
 

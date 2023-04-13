@@ -29,9 +29,7 @@ class SocialBarFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentSocialBarBinding.inflate(inflater)
-        val view = binding.root
-        view.tag = requireArguments().getString("sbfc_view_tag")
-        return view
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,9 +37,7 @@ class SocialBarFragment : Fragment() {
         cn = getContext()?.getColor(R.color.ic_social_normal)
         cs = getContext()?.getColor(R.color.ic_social_selected)
 
-        Log.d(LOGTAG,"personId=${view.tag}")
-
-        view.tag?.let {
+        requireArguments().getString("sbfc_view_tag").let {
             val mapkey = it.toString().toInt()
             Log.d(LOGTAG,"mk=$mapkey")
 
