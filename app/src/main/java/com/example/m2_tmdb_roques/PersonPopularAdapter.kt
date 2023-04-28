@@ -35,7 +35,7 @@ class PersonPopularAdapter(private val persons: ArrayList<Person>, private val a
         setMaxPopularity()
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PersonItemViewHolder {
-        val binding = PersonItemBinding.inflate((LayoutInflater.from(parent.context)), parent, false)
+        val binding = PersonItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PersonItemViewHolder(binding)
     }
 
