@@ -56,6 +56,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:layout="@layout/fragment_social_bar" />
 
+    <!-- for demo purpose only
     <Button
         android:id="@+id/button"
         android:layout_width="wrap_content"
@@ -65,7 +66,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" /> -->
 
     <!-- for demo fragment purpose
         <androidx.fragment.app.FragmentContainerView

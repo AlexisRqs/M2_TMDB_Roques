@@ -1,6 +1,7 @@
 package com.example.m2_tmdb_roques
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
@@ -61,6 +62,12 @@ class PersonPopularAdapter(private val persons: ArrayList<Person>, private val a
 
         // set social bar fragment container view tag with unique person id
         holder.binding.socialBarFcv.tag = curItem.id.toString()
+
+        holder.binding.itemViewCl.setOnClickListener {
+            val intent = Intent()
+            intent.setClass(appCompatActivity,PersonDetailActivity::class.java)
+            appCompatActivity.startActivity(intent)
+        }
 
     }
 
