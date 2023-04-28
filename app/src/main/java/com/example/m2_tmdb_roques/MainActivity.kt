@@ -3,21 +3,24 @@ package com.example.m2_tmdb_roques
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.commit
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.work.*
-import com.example.m2_tmdb_roques.TmdbNotifications.Companion.createPopularPersonNotification
 import com.example.m2_tmdb_roques.databinding.ActivityMainBinding
 import com.example.m2_tmdb_roques.model.Person
 import com.example.m2_tmdb_roques.model.PersonPopularResponse
@@ -28,7 +31,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 const val NOTIFICATION_CHANNEL_ID = "popular_person_notification_channel_id"
-const val TMDB_WORK_REQUEST_TAG = ""
+const val TMDB_WORK_REQUEST_TAG = "tmdb-popular-person"
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,6 +43,9 @@ class MainActivity : AppCompatActivity() {
     private var totalResults = 0
     private var totalPages = Int.MAX_VALUE
     private var curPage = 1
+    private val socialBarViewModel: SocialBarViewModel by viewModels {
+        SocialBarViewModelFactory((application as TmdbApplication).socialBarDao)
+    }
 
     // Register the permissions callback, which handles the user's response to the
     // system permissions dialog. Save the return value, an instance of
@@ -69,26 +75,32 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel()
         initWorkManager()
 
+        /* Demo fragment
         if (savedInstanceState == null) {
-            /*
-            val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+           /* val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
             ft.setReorderingAllowed(true)
             ft.add(R.id.fragmentContainerView, SocialBarFragment())
-            ft.commit()
-            */
+            ft.commit() */
 
-            supportFragmentManager.commit() {
+            /*supportFragmentManager.beginTransaction().apply {
+                setReorderingAllowed(true)
+                add(R.id.fragmentContainerView, SocialBarFragment())
+                commit()
+            }*/
+
+            supportFragmentManager.commit {
                 setReorderingAllowed(true)
                 add(R.id.fragmentContainerView, SocialBarFragment())
             }
-        }
+        } */
+
 
         // Init recycler view
         binding.popularPersonRv.setHasFixedSize(true)
         binding.popularPersonRv.layoutManager = LinearLayoutManager(this)
         personPopularAdapter = PersonPopularAdapter(persons, this)
         binding.popularPersonRv.adapter = personPopularAdapter
-        binding.popularPersonRv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        binding.popularPersonRv.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 if (newState == SCROLL_STATE_IDLE && !recyclerView.canScrollVertically(1)) {
@@ -99,8 +111,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-
+        addLivedataObservers()
         check4NotificationPermission()
+        showHighScore()
         loadPage(curPage)
 
     }
@@ -121,9 +134,12 @@ class MainActivity : AppCompatActivity() {
                     totalResults = response.body()!!.totalResults!!
                     totalPages = response.body()!!.totalPages!!
                     personPopularAdapter.notifyDataSetChanged()
-                    if (isNotifPermGranted && curPage == 1) {
-                        createPopularPersonNotification(applicationContext, response.body()!!.results[0])
-                    }
+
+                    // TODO: uncomment for demo purpose only
+                    /*
+                    if (isNotifPermGranted && curPage ==1) {
+                        TmdbNotifications.createPopularPersonNotification(applicationContext, response.body()!!.results[0])
+                    }*/
                     personPopularAdapter.setMaxPopularity()
                     binding.totalResultsTv.text = getString(R.string.total_results_text,persons.size, totalResults)
                 } else {
@@ -160,17 +176,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun createNotificationChannel() {
-        // Create the NotificationChannel.
-        val name = getString(R.string.notification_channel_name)
-        val descriptionText = getString(R.string.notification_channel_description)
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
-        val mChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance)
-        mChannel.description = descriptionText
-        // Register the channel with the system. You can't change the importance
-        // or other notification behaviors after this.
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(mChannel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create the NotificationChannel.
+            val name = getString(R.string.notification_channel_name)
+            val descriptionText = getString(R.string.notification_channel_description)
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val mChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance)
+            mChannel.description = descriptionText
+            // Register the channel with the system. You can't change the importance
+            // or other notification behaviors after this.
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
     }
 
     private fun initWorkManager() {
@@ -187,7 +206,7 @@ class MainActivity : AppCompatActivity() {
 
         val initialDelay = scheduledTime.timeInMillis - currentTime.timeInMillis
 
-        // Only need to be connected to any network
+        // only need to be connected to any network
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -196,15 +215,46 @@ class MainActivity : AppCompatActivity() {
         val tmdbWorkRequest = PeriodicWorkRequestBuilder<TmdbDailyWorker>(1, TimeUnit.DAYS)
             .addTag(TMDB_WORK_REQUEST_TAG)
             .setConstraints(constraints)
-            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .setInitialDelay(initialDelay,TimeUnit.MILLISECONDS)
+            .setBackoffCriteria( // wait 30 mins before retrying
+                BackoffPolicy.LINEAR,
+                1,
+                TimeUnit.HOURS)
             .build()
+        Log.d(LOGTAG, "initial delay=${initialDelay}")
 
-        // Enqueue request
+        // enqueue request
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             TMDB_WORK_REQUEST_TAG,
-            ExistingPeriodicWorkPolicy.UPDATE,
+            ExistingPeriodicWorkPolicy.KEEP,
             tmdbWorkRequest)
+    }
 
+    fun showHighScore() {
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        val highscore = sharedPref.getFloat(getString(R.string.saved_high_score_key), 0f)
+        Log.w(LOGTAG, "person popular high score = ${highscore}")
+    }
+
+    private fun addLivedataObservers() {
+        // Add observers on the LiveData returned by getAllFavorites and getAllLikes
+        // The onChanged() method fires when the observed data changes and the activity is
+        // in the foreground.
+        socialBarViewModel.nbLikes.observe(this) { map ->
+            Log.d(LOGTAG, "${map.size} persons liked")
+        }
+        socialBarViewModel.isFavorite.observe(this) { map ->
+            Log.d(LOGTAG, "${map.size} favorites persons")
+        }
+    }
+
+    fun showPersonDetail(view: View) {
+        Log.d(LOGTAG,"showPersonDetail()")
+        val intent = Intent()
+        intent.setClass(this, PersonDetailActivity::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        intent.putExtra("extra_person_id", "test-m1")
+        startActivity(intent)
     }
 
 }
