@@ -34,9 +34,20 @@ class SensorDemoView @JvmOverloads constructor(
         strokeWidth = 4f
         textAlign = Paint.Align.CENTER
         color = dialColor
-        textSize = context.resources.getDimension(R.dimen.sensor_view_caption);
+        textSize = context.resources.getDimension(R.dimen.sensor_view_caption)
         typeface = Typeface.create(null as String?, Typeface.NORMAL)
     }
+
+    private var dialMaxrange: String? = null
+
+    // Paint styles used for rendering are initialized here to improve performance,
+    // since onDraw() is called for every screen refresh.
+    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        textAlign = Paint.Align.CENTER
+        textSize = context.resources.getDimension(R.dimen.sensor_view_caption)
+        typeface = Typeface.create(null as String?, Typeface.NORMAL)
+    }
+
 
     // compute dimensions to be used for drawing text
     private val fontMetrics = paint.fontMetrics
@@ -51,6 +62,7 @@ class SensorDemoView @JvmOverloads constructor(
         dialCaption = a.getString(R.styleable.SensorDemoView_dialCaption)
         if (dialCaption == null) dialCaption = if (isInEditMode) context.getString(R.string.sensor_unknown) else ""
         dialColor = a.getColor(R.styleable.SensorDemoView_dialColor, dialColor)
+        dialMaxrange = a.getString(R.styleable.SensorDemoView_dialMaxrange) ?: "unknown maxrange"
         a.recycle()
     }
 
@@ -122,6 +134,11 @@ class SensorDemoView @JvmOverloads constructor(
             captionHeight,
             paint
         )
+
+        // Draw the max range text at the bottom half of the canvas
+        val x = measuredWidth / 2f
+        val y = measuredHeight * 3 / 4f
+        canvas.drawText(dialMaxrange ?: "", x, y, textPaint)
     }
 
     fun setCaption(caption: String) {
@@ -131,6 +148,11 @@ class SensorDemoView @JvmOverloads constructor(
 
     fun setSensorEvent(event: SensorEvent?) {
         this.sensorEvent = event
+        dialMaxrange = if (event != null) {
+            event.sensor.maximumRange.toString()
+        } else {
+            "unknown maxrange"
+        }
         invalidate()
     }
 
