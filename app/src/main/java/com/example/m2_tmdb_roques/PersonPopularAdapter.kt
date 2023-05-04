@@ -2,7 +2,6 @@ package com.example.m2_tmdb_roques
 
 import android.content.Context
 import android.graphics.Color
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,14 +14,21 @@ import com.example.m2_tmdb_roques.databinding.PersonItemBinding
 import com.example.m2_tmdb_roques.model.Person
 import com.squareup.picasso.Picasso
 
-class PersonPopularAdapter(private val persons: ArrayList<Person>, private val appCompatActivity: AppCompatActivity) : RecyclerView.Adapter<PersonPopularAdapter.PersonItemViewHolder>(){
+class PersonPopularAdapter(private val persons: ArrayList<Person>,
+                           private val appCompatActivity: AppCompatActivity
+) : RecyclerView.Adapter<PersonPopularAdapter.PersonItemViewHolder>(){
     private val LOGTAG = PersonPopularAdapter::class.simpleName
     /**
      * Provide a reference to the type of views that you are using (custom ViewHolder)
      */
-    class PersonItemViewHolder(var binding: PersonItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class PersonItemViewHolder(
+        var binding: PersonItemBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.socialBarFcv.id = View.generateViewId()
+            binding.itemViewCl.setOnClickListener {
+                (appCompatActivity as OnPersonItemClickListener).onPersonItemClicked(adapterPosition)
+            }
         }
     }
 
@@ -62,11 +68,18 @@ class PersonPopularAdapter(private val persons: ArrayList<Person>, private val a
         // set social bar fragment container view tag with unique person id
         holder.binding.socialBarFcv.tag = curItem.id.toString()
 
+        /* demo only : no the best place to set the listener
+        holder.binding.itemViewCl.setOnClickListener {
+             val intent = Intent()
+             intent.setClass(appCompatActivity,PersonDetailActivity::class.java)
+             appCompatActivity.startActivity(intent)
+         }*/
+
     }
 
     override fun onViewAttachedToWindow(holder: PersonItemViewHolder) {
         super.onViewAttachedToWindow(holder)
-        Log.d(LOGTAG,"fcv_id=${holder.binding.socialBarFcv.id}")
+
         val sbfcv = holder.binding.socialBarFcv
         val bundle = bundleOf(
             "sbfc_view_tag" to sbfcv.tag

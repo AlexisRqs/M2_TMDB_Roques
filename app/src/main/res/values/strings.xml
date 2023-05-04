@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">M2 TMDB Roques</string>
+    <string name="app_name">M2TMDBRoques</string>
     <string name="main_activity_title">Popular persons</string>
+    <string name="person_detail_activity_title">Person detail</string>
     <string name="total_results_text">"Showing %1d/%1d persons"</string>
     <string name="total_results_default_text">Nothing to show</string>
     <string name="no_label">No label !</string>
@@ -31,6 +32,30 @@
         <item>-3613357</item>
         <item>-8273390</item>
         <item>-16730590</item>
+    </string-array>
+
+    <!-- Sensor demo -->
+    <string name="sensor_demo_activity_title">Sensor Demo</string>
+    <string name="sensor_demo_button">Sensor Demo</string>
+    <string name="sensor_list_caption">Sensor list</string>
+    <string name="sensor_values_caption">Sensor values</string>
+    <string name="no_sensor_values">No values &#8230;</string>
+    <string name="type_caption">Type:</string>
+    <string name="resolution_caption">Resolution:</string>
+    <string name="range_caption">Max range:</string>
+    <string name="sensor_name">sensor name</string>
+    <string name="sensor_unknown">unknown sensor</string>
+
+    <string-array name="dial_needle_colors">
+        <item>-16776961</item>
+        <item>-65536</item>
+        <item>-16711936</item>
+        <item>-65281</item>
+        <item>-256</item>
+        <item>-1611681</item>
+        <item>-8273390</item>
+        <item>-208869</item>
+        <item>-4342339</item>
     </string-array>
 
 </resources>

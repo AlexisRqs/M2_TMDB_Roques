@@ -33,9 +33,11 @@ import java.util.concurrent.TimeUnit
 const val NOTIFICATION_CHANNEL_ID = "popular_person_notification_channel_id"
 const val TMDB_WORK_REQUEST_TAG = "tmdb-popular-person"
 
-class MainActivity : AppCompatActivity() {
 
-    val LOGTAG = MainActivity::class.simpleName
+class MainActivity : AppCompatActivity(), OnPersonItemClickListener {
+
+    private val LOGTAG = MainActivity::class.simpleName
+
     private var isNotifPermGranted = false // TODO: replace with SHARED PREFERENCE
     private lateinit var binding: ActivityMainBinding
     private lateinit var personPopularAdapter: PersonPopularAdapter
@@ -254,6 +256,24 @@ class MainActivity : AppCompatActivity() {
         intent.setClass(this, PersonDetailActivity::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         intent.putExtra("extra_person_id", "test-m1")
+        startActivity(intent)
+    }
+
+    override fun onPersonItemClicked(position: Int) {
+        Log.d(LOGTAG, "onPersonItemClicked(${position})")
+        val person = persons[position]
+        val intent = Intent()
+        intent.setClass(this,PersonDetailActivity::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        intent.putExtra(PERSON_ID_EXTRA_KEY, person.id.toString())
+        startActivity(intent)
+    }
+
+    fun showSensorDemo(view: View) {
+        Log.d(LOGTAG,"showSensorDemo()")
+        val intent = Intent()
+        intent.setClass(this, SensorDemoActivity::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         startActivity(intent)
     }
 

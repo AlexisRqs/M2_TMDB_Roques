@@ -16,6 +16,11 @@
         android:theme="@style/Theme.m2_tmdb_roques"
         tools:targetApi="31">
         <activity
+            android:label="@string/sensor_demo_activity_title"
+            android:name=".SensorDemoActivity"
+            android:exported="false" />
+        <activity
+            android:label="@string/person_detail_activity_title"
             android:name=".PersonDetailActivity"
             android:exported="false" />
         <activity
