@@ -68,6 +68,9 @@ class PersonPopularAdapter(private val persons: ArrayList<Person>,
         // set social bar fragment container view tag with unique person id
         holder.binding.socialBarFcv.tag = curItem.id.toString()
 
+        // Set gender icons
+        setGenderIcon(holder, curItem.gender)
+
         /* demo only : no the best place to set the listener
         holder.binding.itemViewCl.setOnClickListener {
              val intent = Intent()
@@ -135,6 +138,23 @@ class PersonPopularAdapter(private val persons: ArrayList<Person>,
             Color.RED
         }
     }
+
+    private fun setGenderIcon(holder: PersonItemViewHolder, gender: Int?) {
+        val icon = when (gender) {
+            1 -> R.drawable.ic_gender_female
+            2 -> R.drawable.ic_gender_male
+            3 -> R.drawable.ic_gender_trans
+            else -> null
+        }
+
+        if (icon != null) {
+            holder.binding.genderIconIv.setImageResource(icon)
+            holder.binding.genderIconIv.visibility = View.VISIBLE
+        } else {
+            holder.binding.genderIconIv.visibility = View.GONE
+        }
+    }
+
 
     /* class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val nameTv: TextView
