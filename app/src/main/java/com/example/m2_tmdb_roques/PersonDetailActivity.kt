@@ -14,7 +14,7 @@ class PersonDetailActivity : AppCompatActivity() {
         binding = ActivityPersonDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.textView.text = intent.extras?.getString(PERSON_ID_EXTRA_KEY)
+        //binding.textView.text = intent.extras?.getString(PERSON_ID_EXTRA_KEY)
 
 
     }
