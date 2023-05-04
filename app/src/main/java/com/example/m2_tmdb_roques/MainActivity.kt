@@ -36,7 +36,8 @@ const val TMDB_WORK_REQUEST_TAG = "tmdb-popular-person"
 
 class MainActivity : AppCompatActivity(), OnPersonItemClickListener {
 
-    val LOGTAG = MainActivity::class.simpleName
+    private val LOGTAG = MainActivity::class.simpleName
+
     private var isNotifPermGranted = false // TODO: replace with SHARED PREFERENCE
     private lateinit var binding: ActivityMainBinding
     private lateinit var personPopularAdapter: PersonPopularAdapter
